@@ -1,0 +1,485 @@
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --blue: #1D9BF0;
+    --blue-dark: #1A8CD8;
+    --ink: #0F1419;
+    --ink-soft: #536471;
+    --border: #EFF3F4;
+    --bg: #FFFFFF;
+    --page: #F7F9F9;
+    --danger: #F4212E;
+  }
+  * { box-sizing: border-box; }
+  #app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--page);
+    min-height: 100vh;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 28px 14px 60px;
+  }
+  .wrap { width: 100%; max-width: 600px; }
+
+  .header { text-align: center; padding: 6px 0 16px; }
+  .logo { width: 40px; height: 40px; margin: 0 auto 10px; }
+  .brand-title { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+  .brand-sub { font-size: 14px; color: var(--ink-soft); margin: 4px 0 0; }
+
+  .origin {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0 18px;
+  }
+  .dm-bubble {
+    position: relative;
+    max-width: 340px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 13.5px;
+    line-height: 1.4;
+    padding: 10px 14px;
+    border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .dm-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .qr-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .qr-box {
+    width: 96px; height: 96px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+  }
+  .qr-box img, .qr-box canvas { display: block; }
+  .qr-text-title { font-weight: 700; font-size: 15px; margin: 0 0 3px; }
+  .qr-text-sub { font-size: 13px; color: var(--ink-soft); line-height: 1.35; margin: 0; }
+
+  .composer {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px 12px;
+    margin-bottom: 22px;
+  }
+  .composer-top { display: flex; gap: 10px; }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 15px;
+  }
+  .composer-fields { flex: 1; min-width: 0; }
+  .name-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    padding: 7px 2px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+    background: transparent;
+  }
+  .name-input::placeholder { color: var(--ink-soft); font-weight: 400; }
+
+  textarea.msg-input {
+    width: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 19px;
+    line-height: 1.4;
+    color: var(--ink);
+    min-height: 54px;
+    font-family: inherit;
+  }
+  textarea.msg-input::placeholder { color: #8B98A5; }
+
+  .composer-foot {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+
+  .ring-wrap { position: relative; width: 26px; height: 26px; display: none; }
+  .ring-wrap.show { display: block; }
+  .ring-wrap svg { transform: rotate(-90deg); width: 26px; height: 26px; }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 3; }
+  .ring-fg { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.15s linear; }
+  .ring-fg.warn { stroke: #FFD400; }
+  .ring-fg.over { stroke: var(--danger); }
+  .ring-count {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ink-soft);
+  }
+  .ring-count.over { color: var(--danger); }
+
+  .tweet-btn {
+    font-size: 14.5px;
+    font-weight: 800;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .tweet-btn:hover:not(:disabled) { background: var(--blue-dark); }
+  .tweet-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .status {
+    font-size: 12.5px;
+    color: var(--danger);
+    text-align: center;
+    margin: -10px 0 14px;
+    min-height: 14px;
+  }
+
+  .feed-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 4px 8px;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #00BA7C;
+    box-shadow: 0 0 0 0 rgba(0,186,124,0.6);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0,186,124,0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(0,186,124,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,186,124,0); }
+  }
+
+  .feed { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg); }
+  .tweet {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    animation: fadein 0.3s ease both;
+  }
+  .tweet:last-child { border-bottom: none; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(-4px);} to { opacity: 1; transform: translateY(0);} }
+
+  .tweet-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 15px;
+  }
+  .tweet-body { flex: 1; min-width: 0; }
+  .tweet-head { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+  .t-name { font-weight: 800; font-size: 15px; color: var(--ink); }
+  .t-handle { font-size: 14.5px; color: var(--ink-soft); }
+  .t-dot { color: var(--ink-soft); font-size: 13px; }
+  .t-time { font-size: 14.5px; color: var(--ink-soft); }
+  .t-msg { font-size: 15px; line-height: 1.4; color: var(--ink); margin: 2px 0 0; white-space: pre-wrap; word-wrap: break-word; }
+
+  .empty { text-align: center; padding: 44px 20px; color: var(--ink-soft); font-size: 14px; }
+  .empty b { display:block; font-size: 17px; color: var(--ink); margin-bottom: 4px; font-weight: 800; }
+
+  .loading { text-align: center; padding: 44px; color: var(--ink-soft); font-size: 14px; }
+
+  @media (max-width: 480px) {
+    .qr-panel { padding: 14px; gap: 12px; }
+    .qr-box { width: 80px; height: 80px; }
+  }
+</style>
+
+<script>
+(function(){
+  // Same-origin Netlify Function — works automatically once deployed on Netlify.
+  const API_URL = "/.netlify/functions/entries";
+
+  const MAX_LEN = 140;
+  const POLL_MS = 4000;
+  const palette = ['#1D9BF0','#F91880','#00BA7C','#FFD400','#7856FF','#FF7A00'];
+
+  function hashColor(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = str.charCodeAt(i) + ((h<<5)-h); }
+    return palette[Math.abs(h) % palette.length];
+  }
+  function initials(name){ return (name.trim()[0] || '?').toUpperCase(); }
+  function handleize(name){ return '@' + name.trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
+
+  function timeAgo(ts){
+    const diff = Date.now() - ts;
+    const m = Math.floor(diff/60000);
+    if(m < 1) return 'now';
+    if(m < 60) return m + 'm';
+    const h = Math.floor(m/60);
+    if(h < 24) return h + 'h';
+    const d = Math.floor(h/24);
+    if(d < 7) return d + 'd';
+    return new Date(ts).toLocaleDateString(undefined,{month:'short', day:'numeric'});
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  const BIRD_SVG = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="20" r="20" fill="#1D9BF0"/>
+    <path d="M31 14.5c-.8.35-1.6.6-2.5.7.9-.55 1.6-1.4 1.9-2.45-.85.5-1.8.87-2.8 1.07a4.4 4.4 0 0 0-7.5 4c-3.65-.18-6.9-1.93-9.06-4.58a4.4 4.4 0 0 0 1.36 5.87c-.72-.02-1.4-.22-2-.55v.06a4.4 4.4 0 0 0 3.53 4.31c-.66.18-1.36.2-2.03.08a4.4 4.4 0 0 0 4.11 3.05A8.83 8.83 0 0 1 9 27.8a12.45 12.45 0 0 0 6.75 1.98c8.1 0 12.53-6.71 12.53-12.53l-.01-.57c.86-.62 1.6-1.4 2.19-2.28-.79.35-1.63.59-2.5.7z" fill="#fff"/>
+  </svg>`;
+
+  const app = document.getElementById('app');
+  let entries = [];
+  let loaded = false;
+  let error = '';
+  let composerBuilt = false;
+
+  function ringMarkup(remaining){
+    const pct = Math.min(1, Math.max(0, (MAX_LEN - remaining) / MAX_LEN));
+    const r = 10, c = 2 * Math.PI * r;
+    const dash = c * pct;
+    const cls = remaining < 0 ? 'over' : remaining <= 20 ? 'warn' : '';
+    const showRing = remaining <= 30;
+    return `
+      <div class="ring-wrap ${showRing ? 'show' : ''}">
+        <svg viewBox="0 0 26 26">
+          <circle class="ring-bg" cx="13" cy="13" r="${r}"></circle>
+          <circle class="ring-fg ${cls}" cx="13" cy="13" r="${r}" stroke-dasharray="${dash} ${c}"></circle>
+        </svg>
+        ${remaining <= 20 ? `<div class="ring-count ${remaining < 0 ? 'over' : ''}">${remaining}</div>` : ''}
+      </div>`;
+  }
+
+  function renderEntries(){
+    if(entries.length === 0){
+      return '<div class="empty"><b>No tweets yet</b>Be the first to post on the timeline.</div>';
+    }
+    return entries.map(e => `
+      <div class="tweet">
+        <div class="tweet-avatar" style="background:${hashColor(e.name)}">${escapeHtml(initials(e.name))}</div>
+        <div class="tweet-body">
+          <div class="tweet-head">
+            <span class="t-name">${escapeHtml(e.name)}</span>
+            <span class="t-handle">${escapeHtml(handleize(e.name))}</span>
+            <span class="t-dot">&middot;</span>
+            <span class="t-time">${timeAgo(e.ts)}</span>
+          </div>
+          <p class="t-msg">${escapeHtml(e.message)}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateFeedDom(){
+    const feed = document.getElementById('feed');
+    if(feed) feed.innerHTML = !loaded ? '<div class="loading">Loading tweets…</div>' : renderEntries();
+    const statusEl = document.getElementById('statusMsg');
+    if(statusEl) statusEl.textContent = error || '';
+  }
+
+  // Set this to the real published URL once you have one (e.g. the link Claude
+  // gives you after publishing, or your own domain). Leave as null to auto-detect
+  // the current page URL instead.
+  // Auto-detects the page's own URL — once deployed on Netlify this will
+  // correctly point at your real site (e.g. https://your-site.netlify.app).
+  const FIXED_URL = null;
+
+  function renderQr(){
+    const box = document.getElementById('qrBox');
+    if(!box) return;
+    const url = FIXED_URL || window.location.href;
+    // Always render a scannable image via the QR image service — this works
+    // even on preview/blob URLs, though the code will only be USEFUL once it
+    // encodes a real, public https link.
+    box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=176x176&data=${encodeURIComponent(url)}" width="88" height="88" alt="QR code" />`;
+  }
+
+  function buildShell(){
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="header">
+          <div class="logo">${BIRD_SVG}</div>
+          <h1 class="brand-title">Rohan &amp; Aishwarya</h1>
+          <p class="brand-sub">September 6, 2026 &middot; Leave 140 characters for the timeline</p>
+        </div>
+
+        <div class="origin">
+          <div>
+            <div class="dm-label">where it all started</div>
+            <div class="dm-bubble">"wait... did you just slide into my DMs?" — the message that started it all. Add yours to the timeline below.</div>
+          </div>
+        </div>
+
+        <div class="qr-panel">
+          <div class="qr-box" id="qrBox"></div>
+          <div>
+            <p class="qr-text-title">Scan to post from your phone</p>
+            <p class="qr-text-sub">Point your camera at the code — it opens this page so you can add your own tweet for the couple.</p>
+          </div>
+        </div>
+
+        <div class="composer">
+          <div class="composer-top">
+            <div class="avatar" id="composerAvatar" style="background:#CFD9DE">?</div>
+            <div class="composer-fields">
+              <input id="nameInput" class="name-input" placeholder="Your name" maxlength="24" />
+              <textarea id="msgInput" class="msg-input" placeholder="What's happening?" maxlength="${MAX_LEN}" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="composer-foot">
+            <div id="ringHolder">${ringMarkup(MAX_LEN)}</div>
+            <button id="tweetBtn" class="tweet-btn" disabled>Tweet</button>
+          </div>
+        </div>
+
+        <div class="status" id="statusMsg">${error ? escapeHtml(error) : ''}</div>
+
+        <div class="feed-label"><span class="live-dot"></span> Live timeline</div>
+        <div class="feed" id="feed">
+          ${!loaded ? '<div class="loading">Loading tweets…</div>' : renderEntries()}
+        </div>
+      </div>
+    `;
+    attachHandlers();
+    renderQr();
+    composerBuilt = true;
+  }
+
+  function attachHandlers(){
+    const nameInput = document.getElementById('nameInput');
+    const msgInput = document.getElementById('msgInput');
+    const tweetBtn = document.getElementById('tweetBtn');
+    const ringHolder = document.getElementById('ringHolder');
+    const composerAvatar = document.getElementById('composerAvatar');
+
+    nameInput.value = window.__lastName || '';
+
+    function updateState(){
+      const len = msgInput.value.length;
+      const remaining = MAX_LEN - len;
+      ringHolder.innerHTML = ringMarkup(remaining);
+      const name = nameInput.value.trim();
+      if(name){
+        composerAvatar.textContent = initials(name);
+        composerAvatar.style.background = hashColor(name);
+      } else {
+        composerAvatar.textContent = '?';
+        composerAvatar.style.background = '#CFD9DE';
+      }
+      const nameOk = name.length > 0;
+      const msgOk = msgInput.value.trim().length > 0 && remaining >= 0;
+      tweetBtn.disabled = !(nameOk && msgOk);
+    }
+
+    nameInput.addEventListener('input', updateState);
+    msgInput.addEventListener('input', updateState);
+
+    tweetBtn.addEventListener('click', async () => {
+      const name = nameInput.value.trim();
+      const message = msgInput.value.trim();
+      if(!name || !message) return;
+      window.__lastName = name;
+      tweetBtn.disabled = true;
+      tweetBtn.textContent = 'Posting…';
+      error = '';
+      const entry = { name, message, ts: Date.now() };
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, message })
+        });
+        if(!res.ok) throw new Error('bad response');
+        entries.unshift(entry);
+        updateFeedDom();
+      } catch(err){
+        error = "Couldn't post — try again.";
+      }
+      msgInput.value = '';
+      tweetBtn.textContent = 'Tweet';
+      updateState();
+      updateFeedDom();
+    });
+
+    updateState();
+  }
+
+  async function fetchEntries(){
+    try {
+      const res = await fetch(API_URL, { method: 'GET' });
+      if(!res.ok) throw new Error('bad response');
+      const data = await res.json();
+      return data
+        .map(d => ({ name: d.name, message: d.message, ts: d.ts }))
+        .sort((a,b) => b.ts - a.ts);
+    } catch(err){
+      return null;
+    }
+  }
+
+  async function initialLoad(){
+    buildShell();
+    const fresh = await fetchEntries();
+    entries = fresh || [];
+    loaded = true;
+    updateFeedDom();
+    startPolling();
+  }
+
+  function startPolling(){
+    setInterval(async () => {
+      const fresh = await fetchEntries();
+      if(fresh === null) return;
+      const changed = fresh.length !== entries.length ||
+        (fresh[0] && entries[0] && fresh[0].id !== entries[0].id);
+      if(changed){
+        entries = fresh;
+        updateFeedDom();
+      }
+    }, POLL_MS);
+  }
+
+  initialLoad();
+})();
+</script>
