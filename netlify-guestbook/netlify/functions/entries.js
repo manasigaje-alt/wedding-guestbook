@@ -11,7 +11,12 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: "" };
   }
 
-  const store = getStore({ name: "guestbook-entries", consistency: "strong" });
+  const store = getStore({
+    name: "guestbook-entries",
+    consistency: "strong",
+    siteID: process.env.BLOBS_SITE_ID,
+    token: process.env.BLOBS_TOKEN,
+  });
 
   if (event.httpMethod === "GET") {
     const { blobs } = await store.list();
